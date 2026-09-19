@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plain Read — understand your rental agreement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2440;
+    --ink-soft:#4A5270;
+    --paper:#FBFAF6;
+    --paper-line:#E4E0D4;
+    --highlight:#F5C242;
+    --highlight-soft:#FCE9B8;
+    --flag:#B84B3C;
+    --flag-soft:#F3DAD3;
+    --ok:#2F6E4E;
+    --ok-soft:#DCEBDF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+  }
+  ::selection{ background:var(--highlight-soft); }
+
+  header{
+    padding:28px 40px 24px;
+    border-bottom:1px solid var(--paper-line);
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .wordmark{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:-0.01em;
+  }
+  .wordmark span{ color:var(--flag); }
+  .tagline{
+    color:var(--ink-soft);
+    font-size:14px;
+    max-width:340px;
+    text-align:right;
+  }
+
+  main{
+    max-width:1120px;
+    margin:0 auto;
+    padding:48px 40px 100px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:40px;
+  }
+  @media (min-width:900px){
+    main{ grid-template-columns: 420px 1fr; align-items:start; }
+  }
+
+  h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:clamp(30px, 3.4vw, 42px);
+    line-height:1.1;
+    margin:0 0 14px;
+    max-width:14ch;
+  }
+  .lede{
+    color:var(--ink-soft);
+    font-size:16px;
+    max-width:52ch;
+    margin:0 0 32px;
+  }
+
+  .panel{
+    background:#fff;
+    border:1px solid var(--paper-line);
+    padding:24px;
+  }
+  .panel + .panel{ margin-top:20px; }
+
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    margin-bottom:8px;
+  }
+  textarea{
+    width:100%;
+    min-height:220px;
+    resize:vertical;
+    border:1px solid var(--paper-line);
+    background:var(--paper);
+    padding:14px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--ink);
+  }
+  textarea:focus, select:focus, button:focus-visible{
+    outline:2px solid var(--ink);
+    outline-offset:2px;
+  }
+  .fileRow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+  }
+  .fileRow input[type=file]{ font-size:13px; max-width:100%; }
+  .fileRow .or{ color:var(--ink-soft); font-size:12px; }
+
+  select{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid var(--paper-line);
+    background:#fff;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .field{ margin-top:18px; }
+
+  button.primary{
+    margin-top:22px;
+    width:100%;
+    padding:14px 20px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  button.primary:hover{ background:#2B3560; }
+  button.primary:disabled{ background:#9AA0B5; cursor:progress; }
+
+  .hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:10px;
+  }
+
+  /* Output / redline styling */
+  .empty{
+    border:1px dashed var(--paper-line);
+    padding:60px 24px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .empty .mark{
+    display:inline-block;
+    background:var(--highlight-soft);
+    padding:2px 6px;
+  }
+
+  .result{ display:none; }
+  .result.show{ display:block; }
+
+  .resultHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .resultHeader h2{
+    font-family:'Source Serif 4', serif;
+    font-size:20px;
+    font-weight:600;
+    margin:0;
+  }
+  .langBadge{
+    font-size:11px;
+    font-family:'JetBrains Mono', monospace;
+    color:var(--ink-soft);
+    border:1px solid var(--paper-line);
+    padding:3px 8px;
+  }
+
+  .block{
+    border:1px solid var(--paper-line);
+    margin-bottom:14px;
+  }
+  .block h3{
+    margin:0;
+    padding:12px 16px;
+    font-size:13px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border-bottom:1px solid var(--paper-line);
+  }
+  .block .swatch{
+    width:9px; height:9px;
+    display:inline-block;
+  }
+  .block.meaning h3 .swatch{ background:var(--ink); }
+  .block.numbers h3 .swatch{ background:var(--highlight); }
+  .block.watch h3 .swatch{ background:var(--flag); }
+
+  .block .body{
+    padding:16px;
+    font-size:14.5px;
+    color:var(--ink);
+  }
+  .block.watch .body{ background:var(--flag-soft); }
+  .block.numbers .body{ background:var(--highlight-soft); }
+
+  ul.tidy{ margin:0; padding-left:18px; }
+  ul.tidy li{ margin-bottom:8px; }
+  ul.tidy li:last-child{ margin-bottom:0; }
+
+  .loading{
+    display:none;
+    align-items:center;
+    gap:10px;
+    color:var(--ink-soft);
+    font-size:13px;
+    margin-top:16px;
+  }
+  .loading.show{ display:flex; }
+  .dot{
+    width:6px;height:6px;background:var(--flag);
+    animation:pulse 1s infinite ease-in-out;
+  }
+  @keyframes pulse{ 0%,100%{opacity:.2;} 50%{opacity:1;} }
+
+  .errorBox{
+    display:none;
+    border:1px solid var(--flag);
+    background:var(--flag-soft);
+    padding:14px 16px;
+    font-size:13px;
+    margin-top:16px;
+  }
+  .errorBox.show{ display:block; }
+
+  footer{
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 40px 40px;
+    color:var(--ink-soft);
+    font-size:12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">Plain<span>Read</span></div>
+  <div class="tagline">Paste a rental agreement. Get told what it actually means, in your language.</div>
+</header>
+
+<main>
+  <div>
+    <h1>Rental agreements shouldn't need a lawyer to read.</h1>
+    <p class="lede">Paste the text of your agreement, pick a language, and PlainRead breaks it into what it means, the numbers that matter, and the clauses worth a second look — powered by Amazon Bedrock.</p>
+
+    <div class="panel">
+      <label for="docText">Agreement text</label>
+      <textarea id="docText" placeholder="Paste the full text of your rental agreement here...
+
+Tip: copy from a PDF with Ctrl/Cmd+A, Ctrl/Cmd+C, and paste directly."></textarea>
+      <div class="fileRow">
+        <span class="or">or upload a file:</span>
+        <input type="file" id="docFile" accept=".txt,.pdf">
+      </div>
+
+      <!-- Feature: local-language interface (hackathon idea #4), folded in
+           as a bonus on top of the document-explainer (idea #1). Selecting
+           a language here is sent straight to Bedrock in the API call
+           below, so the explanation itself is generated in that language
+           rather than translated after the fact. -->
+      <div class="field">
+        <label for="lang">Explain it in</label>
+        <select id="lang">
+          <option value="English">English</option>
+          <option value="Hindi">हिन्दी (Hindi)</option>
+          <option value="Bengali">বাংলা (Bengali)</option>
+          <option value="Tamil">தமிழ் (Tamil)</option>
+          <option value="Telugu">తెలుగు (Telugu)</option>
+          <option value="Marathi">मराठी (Marathi)</option>
+          <option value="Kannada">ಕನ್ನಡ (Kannada)</option>
+        </select>
+      </div>
+
+      <button class="primary" id="explainBtn">Explain this agreement</button>
+      <div class="loading" id="loading"><span class="dot"></span> Reading it closely, one clause at a time…</div>
+      <div class="errorBox" id="errorBox"></div>
+      <p class="hint">Nothing is stored. Your text is sent once, explained, and forgotten.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel" id="emptyState">
+      <div class="empty">
+        Paste an agreement on the left and hit <span class="mark">Explain this agreement</span> — the plain-language breakdown will show up here.
+      </div>
+    </div>
+
+    <div class="panel result" id="resultPanel">
+      <div class="resultHeader">
+        <h2>What we found</h2>
+        <span class="langBadge" id="langBadgeOut">EN</span>
+      </div>
+
+      <div class="block meaning">
+        <h3><span class="swatch"></span> What this means</h3>
+        <div class="body" id="outMeaning"></div>
+      </div>
+
+      <div class="block numbers">
+        <h3><span class="swatch"></span> Key numbers &amp; dates</h3>
+        <div class="body" id="outNumbers"></div>
+      </div>
+
+      <div class="block watch">
+        <h3><span class="swatch"></span> Worth a second look</h3>
+        <div class="body" id="outWatch"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Built for the WeMakeDevs × AWS Bharat Builds Tour — First Commit. Runs on Amazon Bedrock, AWS Lambda, and Amazon API Gateway.
+</footer>
+
+<script>
+  // Point this at your deployed API Gateway endpoint once the backend is deployed.
+  // Example: https://abc123.execute-api.ap-south-1.amazonaws.com/prod/explain
+  const API_ENDPOINT = "https://jekklmzwph.execute-api.us-east-1.amazonaws.com/Prod/explain";
+
+  const explainBtn = document.getElementById('explainBtn');
+  const docText = document.getElementById('docText');
+  const docFile = document.getElementById('docFile');
+  const langSel = document.getElementById('lang');
+  const loading = document.getElementById('loading');
+  const errorBox = document.getElementById('errorBox');
+  const emptyState = document.getElementById('emptyState');
+  const resultPanel = document.getElementById('resultPanel');
+  const langBadgeOut = document.getElementById('langBadgeOut');
+
+  docFile.addEventListener('change', async () => {
+    const file = docFile.files[0];
+    if (!file) return;
+    if (file.type === 'text/plain') {
+      docText.value = await file.text();
+    } else {
+      // PDFs: for the hackathon, keep it simple — ask the user to paste text,
+      // or wire this up to Amazon Textract in the Lambda for real PDF parsing.
+      errorBox.textContent = "PDF upload needs Textract wired up in the backend (see README). For now, paste the text directly, or upload a .txt file.";
+      errorBox.classList.add('show');
+    }
+  });
+
+  function renderList(container, items) {
+    if (!items || items.length === 0) {
+      container.innerHTML = "<p>Nothing flagged here.</p>";
+      return;
+    }
+    const ul = document.createElement('ul');
+    ul.className = 'tidy';
+    items.forEach(i => {
+      const li = document.createElement('li');
+      li.textContent = i;
+      ul.appendChild(li);
+    });
+    container.innerHTML = '';
+    container.appendChild(ul);
+  }
+
+  explainBtn.addEventListener('click', async () => {
+    const text = docText.value.trim();
+    errorBox.classList.remove('show');
+
+    if (!text) {
+      errorBox.textContent = "Paste your agreement text first.";
+      errorBox.classList.add('show');
+      return;
+    }
+    if (API_ENDPOINT === "PASTE_YOUR_API_GATEWAY_URL_HERE") {
+      errorBox.textContent = "Backend not connected yet — deploy the Lambda/API Gateway stack (see backend/ and README.md) and paste the API URL into API_ENDPOINT at the top of this file's <script>.";
+      errorBox.classList.add('show');
+      return;
+    }
+
+    explainBtn.disabled = true;
+    loading.classList.add('show');
+    resultPanel.classList.remove('show');
+
+    try {
+      // `language` here is the idea #4 feature: it tells the Bedrock
+      // prompt (in backend/app.py) which language to write the whole
+      // explanation in, not just labels/UI chrome.
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_text: text, language: langSel.value })
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server responded ${res.status}`);
+      }
+      const data = await res.json();
+
+      document.getElementById('outMeaning').textContent = data.meaning || "No summary returned.";
+      renderList(document.getElementById('outNumbers'), data.key_numbers || []);
+      renderList(document.getElementById('outWatch'), data.watch_out || []);
+      langBadgeOut.textContent = langSel.value.slice(0,2).toUpperCase();
+
+      emptyState.style.display = 'none';
+      resultPanel.classList.add('show');
+    } catch (err) {
+      errorBox.textContent = "Something went wrong talking to the backend: " + err.message;
+      errorBox.classList.add('show');
+    } finally {
+      explainBtn.disabled = false;
+      loading.classList.remove('show');
+    }
+  });
+</script>
+
+</body>
+</html>

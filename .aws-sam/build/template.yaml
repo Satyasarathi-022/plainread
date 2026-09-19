@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "PlainRead \u2014 explains rental agreements in plain language using\
+  \ Amazon Bedrock, with a local-language interface (Hindi, Bengali, Tamil, Telugu,\
+  \ Marathi, Kannada, English) built in. WeMakeDevs x AWS Bharat Builds Tour submission.\n"
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.12
+Parameters:
+  BedrockRegion:
+    Type: String
+    Default: ap-south-1
+    Description: Region where your Bedrock model access is enabled.
+  BedrockModelId:
+    Type: String
+    Default: amazon.nova-lite-v1:0
+    Description: "Bedrock model ID. Using an Amazon-owned Nova model by default since\
+      \ it is billed directly by AWS, not through a third-party AWS Marketplace subscription\
+      \ like Anthropic's Claude models \u2014 this avoids the INVALID_PAYMENT_INSTRUMENT\
+      \ / Marketplace subscription error some new accounts hit with Claude. If you\
+      \ resolve that on your account later and want to switch back to Claude, remember\
+      \ it needs an inference profile ID (prefixed like \"global.\" or \"us.\"), found\
+      \ via Bedrock console \u2192 Infer \u2192 Inference profiles \u2014 and you'd\
+      \ also need to revert backend/app.py's Converse-API call back to Claude's Messages-API\
+      \ format.\n"
+Resources:
+  ExplainFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ExplainFunction
+      Handler: app.handler
+      Environment:
+        Variables:
+          BEDROCK_REGION:
+            Ref: BedrockRegion
+          BEDROCK_MODEL_ID:
+            Ref: BedrockModelId
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - bedrock:InvokeModel
+          - bedrock:InvokeModelWithResponseStream
+          Resource: '*'
+        - Effect: Allow
+          Action:
+          - aws-marketplace:ViewSubscriptions
+          - aws-marketplace:Subscribe
+          Resource: '*'
+      Events:
+        ExplainApi:
+          Type: Api
+          Properties:
+            Path: /explain
+            Method: post
+        ExplainApiOptions:
+          Type: Api
+          Properties:
+            Path: /explain
+            Method: options
+    Metadata:
+      SamResourceId: ExplainFunction
+Outputs:
+  ApiUrl:
+    Description: Paste this into API_ENDPOINT in frontend/index.html
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/explain
